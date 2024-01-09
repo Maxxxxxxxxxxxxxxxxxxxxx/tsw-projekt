@@ -32,4 +32,5 @@ logs/
 import/
 plugins/
 
+ssl/
 .env
