@@ -14,10 +14,6 @@ function trimPattern(input) {
   return trimmed;
 }
 
-// export function _mapRecordsToObject(records) {
-//   return records.map((e) => e._fields[0].properties);
-// }
-
 export function _mapRecordsToObject(records) {
   return records.map((record) => {
     const newRecord = {};
