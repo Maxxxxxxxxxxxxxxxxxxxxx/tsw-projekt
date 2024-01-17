@@ -1,14 +1,27 @@
 import auth from "./routers/auth";
+import posts from "./routers/posts";
 import express from "express";
 import cookieParser from "cookie-parser";
 import passport from "./auth/passport";
 import expressSession from "express-session";
+import mongodbSession from "connect-mongodb-session";
 import { createServer } from "node:https";
 import { readFileSync } from "node:fs";
 
 const apiPort = process.env.API_PORT || 3000;
 const apiHost = process.env.API_HOST || "localhost";
 const cookiesSecret = process.env.COOKIE_SECRET || "sekretCookie";
+const passphrase = process.env.CERT_PASSPHRASE;
+const mongoUri = process.env.MONGO_URI;
+
+const sessionStorage = mongodbSession(expressSession);
+
+const sessionStorageInstance = new sessionStorage({
+  // @ts-ignore
+  uri: mongoUri,
+  collection: "session",
+  databaseName: "tsw",
+});
 
 const app = express();
 
@@ -16,14 +29,15 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   expressSession({
-    cookie: {
-      maxAge: 2137000000,
-      secure: true,
-    },
     saveUninitialized: false,
     resave: false,
     secret: cookiesSecret,
-    name: "session.id",
+    name: "sessionId",
+    store: sessionStorageInstance,
+    cookie: {
+      maxAge: 1000 * 3600,
+      secure: true,
+    },
   })
 );
 app.use(passport.initialize());
@@ -37,10 +51,11 @@ app.use((req, res, next) => {
 });
 
 app.use("/api/auth", auth);
+app.use("/api/posts", posts);
 
 const server = createServer(
   {
-    passphrase: "krowa12",
+    passphrase,
     key: readFileSync("./ssl/key.pem"),
     cert: readFileSync("./ssl/cert.pem"),
   },
