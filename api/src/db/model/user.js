@@ -184,3 +184,29 @@ export async function followUser(followerId, followedId) {
     return { message: `User ${followedId} followed` };
   }
 }
+
+/**
+ * @param {string} userid
+ */
+export async function getFollowers(userid) {
+  const session = getSession();
+  const res = await session.run(
+    `
+  MATCH (u:User { userid: $userid})<-[:FOLLOWS]-(f:User) return f
+  `,
+    { userid }
+  );
+
+  session.close();
+
+  const records = _mapRecordsToObject(res.records);
+
+  try {
+    // @ts-ignore
+    const res = records.map((record) => schema.parse(record));
+    return res;
+  } catch (e) {
+    log.error(`Failed to parse user schema {getFollowers}`);
+    return;
+  }
+}
