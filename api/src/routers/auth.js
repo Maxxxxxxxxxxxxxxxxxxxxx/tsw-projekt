@@ -11,13 +11,20 @@ dotenv.config();
 const router = express.Router();
 
 // Login
-router.post("/", passport.authenticate("local"), function (req, res) {
+router.put("/", passport.authenticate("local"), function (req, res) {
   res.status(200).send();
 });
 
 // Register new user
-router.post("/", function (req, res) {
-  req.res.status(200).send();
+router.post("/", async function (req, res) {
+  const { username, password } = req.body;
+  const r = await userModel.save(username, password);
+
+  if (!r) {
+    res.status(409).json("User already exists!");
+  } else {
+    res.status(200);
+  }
 });
 
 // Protected route
