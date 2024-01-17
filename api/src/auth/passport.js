@@ -3,17 +3,13 @@ import * as userModel from "../db/model/user";
 import hash from "./hash";
 import passport from "passport";
 
-passport.serializeUser(async function (userId, done) {
-  console.log("called serializeUser. userId:", userId);
-
-  // @ts-ignore
-  const u = await userModel.get(userId);
-
-  done(null, u.userid);
+// param "user" is user database object
+passport.serializeUser(async function (user, done) {
+  done(null, user);
 });
 
+// what gets exposed in router
 passport.deserializeUser(function (user, done) {
-  console.log("called deserializeUser. user:", user);
   done(null, user.userid);
 });
 
