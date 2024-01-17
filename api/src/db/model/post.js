@@ -21,6 +21,8 @@ export async function get(id) {
     ? await session.run(`MATCH (p:Post { postid: $id }) RETURN p`, { id })
     : await session.run(`MATCH (p:Post) RETURN p`);
 
+  session.close();
+
   return _mapRecordsToObject(res.records);
 }
 
@@ -35,6 +37,8 @@ export async function getReplies(id) {
     { id }
   );
 
+  session.close();
+
   return _mapRecordsToObject(res.records);
 }
 
@@ -44,6 +48,7 @@ export async function getReplies(id) {
  */
 export async function save(userid, content) {
   const session = getSession();
+  const postid = uuid();
   const res = await session.run(
     `
     MATCH (u:User {userid: $userid})
@@ -54,7 +59,7 @@ export async function save(userid, content) {
     })<-[:POSTED]-(u)
     RETURN p
     `,
-    { userid, content, dateposted: Date.now(), postid: uuid() }
+    { userid, content, dateposted: Date.now(), postid }
   );
 
   session.close();
@@ -63,7 +68,7 @@ export async function save(userid, content) {
   const parsedRecord = postSchema.parse(record);
 
   if (parsedRecord) {
-    log.debug("Created post", parsedRecord);
+    log.debug(`Created thread ${postid}`);
     return parsedRecord;
   }
 
@@ -80,11 +85,12 @@ export async function deletePost(postid) {
     { postid }
   );
 
+  session.close();
+
   if (_mapRecordsToObject(res.records)) {
+    log.debug(`Deleted post ${postid}`);
     return { message: `Post ${postid} deleted!` };
   }
-
-  session.close();
 }
 
 /** Create a reply
@@ -94,6 +100,7 @@ export async function deletePost(postid) {
  */
 export async function saveReply(userid, content, opid) {
   const session = getSession();
+  const postid = uuid();
   const res = await session.run(
     `
     MATCH (op:Post { postid: $opid })
@@ -105,13 +112,16 @@ export async function saveReply(userid, content, opid) {
     })<-[:POSTED]-(u)
     RETURN p
     `,
-    { userid, content, dateposted: Date.now(), postid: uuid(), opid }
+    { userid, content, dateposted: Date.now(), postid, opid }
   );
 
-  const record = _mapRecordsToObject(res.records);
+  session.close();
+
+  const record = _mapRecordsToObject(res.records)[0];
   const parsedRecord = postSchema.parse(record);
 
   if (parsedRecord) {
+    log.debug(`Saved reply ${postid} -> ${opid}`);
     return parsedRecord;
   }
 }
@@ -137,10 +147,13 @@ export async function citePost(userid, content, opid) {
     { userid, content, dateposted: Date.now(), postid: uuid(), opid }
   );
 
-  const record = _mapRecordsToObject(res.records);
+  session.close();
+
+  const record = _mapRecordsToObject(res.records)[0];
   const parsedRecord = postSchema.parse(record);
 
   if (parsedRecord) {
+    log.debug(`Created thread ${opid} citing ${opid}`);
     return parsedRecord;
   }
 }
@@ -156,23 +169,26 @@ export async function saveReplyWithCitation(userid, content, opid, citid) {
   const res = await session.run(
     `
     MATCH (op:Post { postid: $opid })
+    MATCH (citation:Post { postid: $citid })
     MATCH (u:User {userid: $userid})
     CREATE (op)<-[:REPLIED_TO]-(p:Post { 
       postid: $postid, 
       content: $content,
       dateposted: $dateposted 
     })<-[:POSTED]-(u)
+    CREATE (citation)<-[:CITES]-(p)
     RETURN p
     `,
-    { userid, content, dateposted: Date.now(), postid: uuid(), opid }
+    { userid, content, dateposted: Date.now(), postid: uuid(), opid, citid }
   );
 
-  const res2 = await session.run(``);
+  session.close();
 
-  const record = _mapRecordsToObject(res.records);
+  const record = _mapRecordsToObject(res.records)[0];
   const parsedRecord = postSchema.parse(record);
 
   if (parsedRecord) {
+    log.debug(`Created reply ${opid} -> ${opid}, citing ${citid}`);
     return parsedRecord;
   }
 }
@@ -183,11 +199,14 @@ export async function getThreads() {
   const res = await session.run(`
     MATCH (p:Post)
     MATCH (u:User)
-    OPTIONAL MATCH (op:Post)<-[:REPLIED_TO]-(p)
-    WHERE op IS NULL
+    WHERE NOT (p)-[:REPLIED_TO]->()
     MATCH (p)<-[:POSTED]-(u)
-    RETURN p, u.userid, u.username ORDER BY p.dateposted;
+    RETURN p, u.userid as userid, u.username as username;
   `);
+
+  session.close();
+
+  
 
   return _mapRecordsToObject(res.records);
 }
