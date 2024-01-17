@@ -1,10 +1,11 @@
-export default function hash(password) {
-  bcrypt.hash(password, 10, function (err, hashedPassword) {
-    if (err) {
-      console.error(err);
-      return;
-    }
+import crypto from "node:crypto";
 
-    return hashedPassword;
-  });
+/**
+ * @param {crypto.BinaryLike} password
+ */
+export default function hash(password) {
+  const hash = crypto.createHash("sha256");
+  hash.update(password);
+  const hashedPassword = hash.digest("hex");
+  return hashedPassword;
 }
