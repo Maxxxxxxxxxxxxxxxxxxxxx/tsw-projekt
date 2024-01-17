@@ -15,3 +15,13 @@ services:
       - ./.neo4j/logs:/logs
       - ./.neo4j/import:/import
       - ./.neo4j/plugins:/plugins
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      # MONGO_INITDB_ROOT_USERNAME: root
+      # MONGO_INITDB_ROOT_PASSWORD: p@ssw0rd
+      MONGO_INITDB_DATABASE: tsw
