@@ -7,6 +7,7 @@ import expressSession from "express-session";
 import mongodbSession from "connect-mongodb-session";
 import { createServer } from "node:https";
 import { readFileSync } from "node:fs";
+import log from "./log";
 
 const apiPort = process.env.API_PORT || 3000;
 const apiHost = process.env.API_HOST || "localhost";
@@ -63,7 +64,7 @@ const server = createServer(
 );
 
 server.listen(apiPort, () => {
-  console.log(`Server available from: https://${apiHost}:${apiPort}`);
+  log.info(`Server available from: https://${apiHost}:${apiPort}`);
 });
 
 // app.set("view engine", "ejs");

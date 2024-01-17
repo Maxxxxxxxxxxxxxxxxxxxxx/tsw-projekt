@@ -3,6 +3,7 @@ import getSession from "../driver";
 import { v4 as uuid } from "uuid";
 import { z } from "zod";
 import { _mapRecordsToObject } from "./util";
+import log from "../../log";
 
 const schema = z.object({
   username: z.string(),
@@ -89,12 +90,14 @@ export async function save(username, password) {
           passwordHash: $passwordHash, 
           userid: $userid,
           bio: \"\",
-          image: \"\",
+          image: \"\"
         })
         RETURN user;
         `,
       { username, passwordHash: hash(password), userid: uuid() }
     );
+
+    log.debug(`Created user { username: ${username} }`);
 
     return _mapRecordsToObject(createdUser.records);
   }
