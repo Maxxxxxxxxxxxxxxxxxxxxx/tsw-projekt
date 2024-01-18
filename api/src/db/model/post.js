@@ -206,7 +206,26 @@ export async function getThreads() {
 
   session.close();
 
-  
+  return _mapRecordsToObject(res.records);
+}
+
+/**
+ * @param {string} userid
+ */
+export async function getUserThreads(userid) {
+  const session = getSession();
+  const res = await session.run(
+    `
+    MATCH (p:Post)
+    MATCH (u:User { userid: $userid })
+    WHERE NOT (p)-[:REPLIED_TO]->()
+    MATCH (p)<-[:POSTED]-(u)
+    RETURN p, u.userid as userid, u.username as username;
+  `,
+    { userid }
+  );
+
+  session.close();
 
   return _mapRecordsToObject(res.records);
 }
