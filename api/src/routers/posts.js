@@ -11,7 +11,11 @@ router.post("/", checkAuthenticated, async function (req, res) {
   const userId = req.user;
   const postContent = req.body.content;
 
-  const createdPost = await postModel.save(userId, postContent);
+  const citationId = req.query["cite"];
+
+  const createdPost = citationId
+    ? await postModel.citePost(userId, content, citationId)
+    : await postModel.save(userId, postContent);
 
   res.status(201).json(createdPost);
 });
