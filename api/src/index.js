@@ -1,5 +1,6 @@
 import auth from "./routers/auth";
 import posts from "./routers/posts";
+import cdnStatic from "./routers/cdn-static";
 import express from "express";
 import cookieParser from "cookie-parser";
 import passport from "./auth/passport";
@@ -7,6 +8,7 @@ import expressSession from "express-session";
 import mongodbSession from "connect-mongodb-session";
 import { createServer } from "node:https";
 import { readFileSync } from "node:fs";
+import path from "path";
 import log from "./log";
 
 const apiPort = process.env.API_PORT || 3000;
@@ -25,6 +27,8 @@ const sessionStorageInstance = new sessionStorage({
 });
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, "static")));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -53,6 +57,8 @@ app.use((req, res, next) => {
 
 app.use("/api/auth", auth);
 app.use("/api/posts", posts);
+app.use("/api/static", cdnStatic);
+// app.use("/api/users", users);
 
 const server = createServer(
   {
