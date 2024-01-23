@@ -2,6 +2,8 @@ import { Strategy as LocalStrategy } from "passport-local";
 import * as userModel from "../db/model/user";
 import hash from "./hash";
 import passport from "passport";
+import { _mapRecordsToObject } from "../db/model/util";
+import log from "../log";
 
 // param "user" is user database object
 passport.serializeUser(async function (user, done) {
@@ -15,18 +17,27 @@ passport.deserializeUser(function (user, done) {
 
 passport.use(
   new LocalStrategy(async function (username, password, done) {
-    const h = hash(password);
-    const res = await userModel.getByUsername(username);
+    try {
+      if (!username || !password) return done(null, false);
 
-    const u = res[0];
+      const h = hash(password);
+      const res = await userModel.getByUsername(username);
 
-    // console.log(`GIVEN: ${h}\nACTUAL:${u.passwordHash}`);
-    // console.log(u);
+      if (!res) return done(null, false);
 
-    if (h != u.passwordHash) return done(null, false);
-    if (!u) return done(null, false);
+      const u = res[0];
 
-    return done(null, u);
+      // console.log(`GIVEN: ${h}\nACTUAL:${u.passwordHash}`);
+      // console.log(u);
+
+      if (h != u.passwordHash) return done(null, false);
+      if (!u) return done(null, false);
+
+      return done(null, u);
+    } catch (e) {
+      log.error(e);
+      return done(null, false);
+    }
   })
 );
 
