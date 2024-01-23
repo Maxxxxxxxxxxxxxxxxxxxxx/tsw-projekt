@@ -2,17 +2,22 @@
 import axios from "axios";
 import PostCard from "../ui/postCard.vue";
 import PostForm from "../ui/postForm.vue";
+import ReplyForm from "../ui/replyForm.vue";
+import isLoggedIn from "@/isLoggedIn";
+import LoginTo from "../ui/loginTo.vue";
 
 export default {
   components: {
     PostCard,
-    PostForm,
+    ReplyForm,
+    LoginTo,
   },
   data() {
     return {
       opData: {},
       replies: [],
       loaded: false,
+      loggedIn: false,
     };
   },
   async mounted() {
@@ -27,6 +32,8 @@ export default {
       return { ...postData, dateposted: date.toLocaleString() };
     });
 
+    console.log(dataWithParsedDate);
+
     this.replies = dataWithParsedDate;
 
     const threadRes = await axios.get(
@@ -40,6 +47,8 @@ export default {
 
     this.opData = threadParsed[0];
 
+    if (await isLoggedIn()) this.loggedIn = true;
+
     console.log("opdata", this.opData);
     console.log("replies", this.replies);
 
@@ -52,7 +61,8 @@ export default {
   <div class="main-container">
     <div class="container-l thread" v-if="loaded">
       <PostCard :data="opData" />
-      <PostForm />
+      <ReplyForm v-if="loggedIn" />
+      <LoginTo :prompt="'Log in to reply'" v-else />
       <PostCard v-for="item in replies" :key="item.postid" :data="item" />
     </div>
     <div class="container-l thread" v-else>Loading...</div>

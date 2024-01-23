@@ -10,38 +10,61 @@ export default {
       dateposted: String,
       content: String,
       username: String,
+      image: String,
       postid: String,
       replied: Number,
     },
+  },
+  data() {
+    return {
+      parsed: false,
+    };
+  },
+  methods: {
+    handleClick() {
+      this.$router.push(`/thread/${this.data.postid}`);
+    },
+    handleRedirect() {
+      this.$router.push(`/profile/${this.data.userid}`);
+    },
+  },
+  watch: {
+    "$route.params.postid": function (newPostId, old) {
+      location.reload();
+    },
+  },
+  created() {
+    const date = new Date(this.data.dateposted);
+    this.data.dateposted = date.toLocaleString();
+    this.parsed = true;
   },
 };
 </script>
 
 <template>
-  <div class="card">
+  <div class="card" v-if="parsed">
     <div class="card-body">
       <div class="card-upper">
         <div class="card-userwrapper">
-          <Avatar />
-          <h5 class="card-title">{{ data.username }}</h5>
+          <Avatar :image="data.image" />
+          <h5 @click="handleRedirect" class="card-title">
+            {{ data.username }}
+          </h5>
         </div>
-        <h8 class="card-dateposted text-muted">
+        <div class="card-dateposted text-muted">
           {{ data.dateposted }}
-        </h8>
+        </div>
       </div>
       <p class="card-text">
         {{ data.content }}
       </p>
       <div class="card-lower">
-        <a href="#" class="card-btn">
+        <div href="#" class="card-btn">
           <i class="bi bi-arrow-repeat"></i>
-        </a>
-        <router-link
-          :to="{ name: 'thread', params: { postid: data.postid } }"
-          class="card-btn"
-        >
+        </div>
+        <div @click="handleClick" class="card-btn">
           <i class="bi bi-chat"></i>
-        </router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -58,6 +81,7 @@ export default {
 
 .card-title {
   margin-bottom: 0;
+  cursor: pointer;
 }
 
 .card-lower {
@@ -73,6 +97,7 @@ export default {
 .card-btn:hover {
   background-color: rgba(0, 0, 0, 0.05);
   border-radius: 15%;
+  cursor: pointer;
 }
 
 .card {

@@ -1,40 +1,90 @@
 <script>
+import isLoggedIn from "@/isLoggedIn";
 import Avatar from "./avatar.vue";
+import LoginTo from "./loginTo.vue";
+import axios from "axios";
+
 export default {
   components: {
     Avatar,
+    LoginTo,
   },
   data() {
     return {
+      content: "",
       user: {
         image: String,
         userid: String,
       },
       loggedIn: false,
+      loaded: false,
     };
   },
-  mounted() {
-    axios.get("https://localhost:3000/api/users").then((res) => {
-      if (res.status === 200) {
-        this.user = res.data;
-        this.loggedIn = true;
+  async created() {
+    try {
+      const res = await isLoggedIn();
+      this.user = {
+        image: res.image,
+        userid: res.userid,
+      };
+
+      this.loggedIn = true;
+    } catch {
+      this.loggedIn = false;
+    } finally {
+      this.loaded = true;
+    }
+  },
+  methods: {
+    async handleSubmit() {
+      const opid = this.$route.params.postid;
+
+      if (!this.content) {
+        alert("Write something!");
+        return;
       }
-    });
+
+      try {
+        await axios.post(
+          `https://localhost:3000/api/posts/reply?op=${opid}`,
+          { content: this.content },
+          {
+            withCredentials: true,
+          }
+        );
+
+        location.reload();
+      } catch (e) {
+        console.log(e);
+        alert("Error creating reply!");
+      }
+    },
   },
 };
 </script>
 
 <template>
-  <form :v-if="loggedIn" action="" class="postform">
+  <form
+    v-if="loggedIn"
+    @submit.prevent="handleSubmit"
+    action=""
+    class="postform replyform"
+  >
     <Avatar />
     <input
-      :v-if="loggedIn"
       class="form-control form-control-sm"
       type="text"
-      placeholder="Start a thread..."
+      placeholder="Reply..."
+      v-model="this.content"
     />
-    <button type="button" class="btn btn-primary btn-submitPost">Post</button>
+    <button type="submit" class="btn btn-primary btn-blackwhite">Post</button>
   </form>
+  <div class="postform-signedout" v-else>
+    <!-- <router-link class="" :to="{ name: 'login' }">
+      Log in to reply
+    </router-link> -->
+    <LoginTo :prompt="'Log in to reply'" />
+  </div>
 </template>
 
 <style scoped>
@@ -44,6 +94,11 @@ export default {
   flex-direction: row;
   gap: 1rem;
   width: 100%;
+}
+
+.postform-signedout {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 }
 
 .form-control {
@@ -56,7 +111,7 @@ export default {
   word-wrap: break-word;
 }
 
-.btn-submitPost {
+.btn-blackwhite {
   border-radius: 0.9rem;
   min-width: 1.5rem;
   font-weight: bolder;
@@ -65,7 +120,7 @@ export default {
   border: 3px black solid;
 }
 
-.btn-submitPost:hover {
+.btn-blackwhite:hover {
   background-color: white;
   color: black;
 }

@@ -1,65 +1,166 @@
 <script>
-import Avatar from "../ui/avatar.vue";
+import axios from "axios";
+import isLoggedIn from "@/isLoggedIn";
 export default {
   data() {
     return {
       user: {
         image: String,
         userid: String,
+        username: "",
+        password: "",
       },
-      loggedIn: false,
+      register: false,
     };
   },
-  mounted() {
-    axios.get("https://localhost:3000/api/users").then((res) => {
-      if (res.status === 200) {
-        this.user = res.data;
-        this.loggedIn = true;
+  async created() {
+    const res = await isLoggedIn();
+    if (res) this.$router.push("/home");
+  },
+  methods: {
+    setLogin() {
+      this.register = false;
+    },
+    setRegister() {
+      this.register = true;
+    },
+    async handleSubmit() {
+      const userData = {
+        username: this.username,
+        password: this.password,
+      };
+
+      console.log(userData);
+
+      if (this.register) {
+        try {
+          const response = await axios.post(
+            "https://localhost:3000/api/auth/",
+            userData,
+            {
+              withCredentials: true,
+            }
+          );
+
+          if (response.status === 200) {
+            const loginRes = await axios.put(
+              "https://localhost:3000/api/auth/",
+              userData,
+              {
+                withCredentials: true,
+              }
+            );
+
+            if (loginRes.status === 200) {
+              this.$router.push("/home");
+            }
+          }
+        } catch {
+          alert("Error registering!");
+        }
+      } else {
+        try {
+          const response = await axios.put(
+            "https://localhost:3000/api/auth/",
+            userData,
+            {
+              withCredentials: true,
+            }
+          );
+
+          try {
+            const res = await isLoggedIn();
+            if (res) this.$router.push("/home");
+            location.reload();
+          } catch {
+            alert("User not logged in!");
+          }
+
+          if (response.status === 200) {
+            this.$router.push("/home");
+            location.reload();
+          }
+        } catch {
+          alert("Wrong username/password!");
+        }
       }
-    });
+
+      console.log(response);
+    },
   },
 };
 </script>
 
 <template>
-  <form>
+  <form @submit.prevent="handleSubmit">
+    <div class="heading">
+      <h3 class="labelonclick" @click="setLogin">Login</h3>
+      <h3>/</h3>
+      <h3 class="labelonclick" @click="setRegister">Register</h3>
+    </div>
+    <br />
     <div class="form-group">
-      <label for="exampleInputEmail1">Email address</label>
       <input
-        type="email"
-        class="form-control"
-        id="exampleInputEmail1"
-        aria-describedby="emailHelp"
-        placeholder="Enter email"
+        type="text"
+        class="form-input"
+        id="username"
+        placeholder="Username"
+        v-model="username"
       />
-      <small id="emailHelp" class="form-text text-muted"
-        >We'll never share your email with anyone else.</small
-      >
     </div>
     <div class="form-group">
-      <label for="exampleInputPassword1">Password</label>
       <input
         type="password"
-        class="form-control"
-        id="exampleInputPassword1"
+        class="form-input"
+        id="password"
         placeholder="Password"
+        v-model="password"
       />
     </div>
-    <div class="form-group form-check">
-      <input type="checkbox" class="form-check-input" id="exampleCheck1" />
-      <label class="form-check-label" for="exampleCheck1">Check me out</label>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+    <button
+      v-if="register"
+      type="submit"
+      class="btn btn-primary btn-blackwhite"
+    >
+      Register
+    </button>
+    <button v-else type="submit" class="btn btn-primary btn-blackwhite">
+      Login
+    </button>
   </form>
 </template>
 
 <style scoped>
+.labelonclick:hover {
+  cursor: pointer;
+}
+
+.heading {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
 .postform {
   padding: 1rem 0 0.8rem 0;
   display: flex;
   flex-direction: row;
   gap: 1rem;
   width: 100%;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  justify-items: center;
+  align-items: center;
+  align-content: center;
+  gap: 0.5rem;
+}
+
+.form-group {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
 }
 
 .form-control {
@@ -72,16 +173,26 @@ export default {
   word-wrap: break-word;
 }
 
-.btn-submitPost {
+.form-input {
+  border: none;
+  width: 100%;
+}
+
+input:focus {
+  outline: none;
+}
+
+.btn-blackwhite {
   border-radius: 0.9rem;
   min-width: 1.5rem;
   font-weight: bolder;
   background-color: black;
   color: white;
   border: 3px black solid;
+  width: 10rem;
 }
 
-.btn-submitPost:hover {
+.btn-blackwhite:hover {
   background-color: white;
   color: black;
 }

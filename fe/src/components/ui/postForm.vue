@@ -1,6 +1,7 @@
 <script>
 import Avatar from "./avatar.vue";
 import axios from "axios";
+
 export default {
   components: {
     Avatar,
@@ -12,29 +13,48 @@ export default {
         userid: String,
       },
       loggedIn: false,
+      content: "",
     };
   },
-  mounted() {
-    axios.get("https://localhost:3000/api/users").then((res) => {
-      if (res.status === 200) {
-        this.user = res.data;
-        this.loggedIn = true;
+  methods: {
+    async handleSubmit() {
+      console.log(this.content);
+      if (this.content) {
+        await axios.post(
+          "https://localhost:3000/api/posts/",
+          {
+            content: this.content,
+          },
+          { withCredentials: true }
+        );
+
+        location.reload();
+      } else {
+        alert("Post cannot be empty!");
       }
-    });
+    },
+  },
+  mounted() {
+    // axios.get("https://localhost:3000/api/users").then((res) => {
+    //   if (res.status === 200) {
+    //     this.user = res.data;
+    //     this.loggedIn = true;
+    //   }
+    // });
   },
 };
 </script>
 
 <template>
-  <form :v-if="loggedIn" action="" class="postform">
-    <Avatar />
+  <form @submit.prevent="handleSubmit" class="postform">
+    <Avatar :image="image" />
     <input
-      :v-if="loggedIn"
+      v-model="content"
       class="form-control form-control-sm"
       type="text"
       placeholder="Start a thread..."
     />
-    <button type="button" class="btn btn-primary btn-submitPost">Post</button>
+    <button type="submit" class="btn btn-primary btn-blackwhite">Post</button>
   </form>
 </template>
 
@@ -57,7 +77,7 @@ export default {
   word-wrap: break-word;
 }
 
-.btn-submitPost {
+.btn-blackwhite {
   border-radius: 0.9rem;
   min-width: 1.5rem;
   font-weight: bolder;
@@ -66,7 +86,7 @@ export default {
   border: 3px black solid;
 }
 
-.btn-submitPost:hover {
+.btn-blackwhite:hover {
   background-color: white;
   color: black;
 }
