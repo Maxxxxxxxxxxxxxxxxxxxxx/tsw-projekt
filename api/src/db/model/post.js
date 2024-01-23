@@ -18,8 +18,11 @@ export async function get(id) {
   const session = getSession();
 
   const res = id
-    ? await session.run(`MATCH (p:Post { postid: $id }) RETURN p`, { id })
-    : await session.run(`MATCH (p:Post) RETURN p`);
+    ? await session.run(
+        `MATCH (p:Post { postid: $id })<-[:POSTED]-(u:User) RETURN p, u`,
+        { id }
+      )
+    : await session.run(`MATCH (p:Post)<-[:POSTED]- RETURN p`);
 
   session.close();
 
@@ -32,14 +35,27 @@ export async function get(id) {
 export async function getReplies(id) {
   const session = getSession();
 
-  const res = await session.run(
-    `MATCH (p:Post { postid: $id })<-[:REPLIED_TO]-(subPost:Post) RETURN subPost`,
-    { id }
-  );
+  try {
+    const res = await session.run(
+      // `MATCH (p:Post { postid: $id })<-[:REPLIED_TO]-(subPost:Post) RETURN subPost`,
+      `MATCH (p:Post { postid: $id })<-[:REPLIED_TO]-(subPost:Post)<-[:POSTED]-(u:User) RETURN subPost, u`,
+      { id }
+    );
 
-  session.close();
+    session.close();
 
-  return _mapRecordsToObject(res.records);
+    const mapped = _mapRecordsToObject(res.records);
+
+    // @ts-ignore
+    const result = mapped.map((obj) => {
+      const { passwordHash, ...rest } = obj;
+      return rest;
+    });
+
+    return result;
+  } catch {
+    return [];
+  }
 }
 
 /** Saves post
@@ -99,6 +115,8 @@ export async function deletePost(postid) {
  * @param {string} opid
  */
 export async function saveReply(userid, content, opid) {
+  log.debug("call saveReply");
+
   const session = getSession();
   const postid = uuid();
   const res = await session.run(
@@ -132,6 +150,8 @@ export async function saveReply(userid, content, opid) {
  * @param {string} opid
  */
 export async function citePost(userid, content, opid) {
+  log.debug("call citePost");
+
   const session = getSession();
   const res = await session.run(
     `
@@ -165,6 +185,8 @@ export async function citePost(userid, content, opid) {
  * @param {string} citid
  */
 export async function saveReplyWithCitation(userid, content, opid, citid) {
+  log.debug("call saveReplyWithCitation");
+
   const session = getSession();
   const res = await session.run(
     `
@@ -184,6 +206,8 @@ export async function saveReplyWithCitation(userid, content, opid, citid) {
 
   session.close();
 
+  log.debug(res.records);
+
   const record = _mapRecordsToObject(res.records)[0];
   const parsedRecord = postSchema.parse(record);
 
@@ -201,7 +225,7 @@ export async function getThreads() {
     MATCH (u:User)
     WHERE NOT (p)-[:REPLIED_TO]->()
     MATCH (p)<-[:POSTED]-(u)
-    RETURN p, u.userid as userid, u.username as username;
+    RETURN p, u;
   `);
 
   session.close();
@@ -220,7 +244,7 @@ export async function getUserThreads(userid) {
     MATCH (u:User { userid: $userid })
     WHERE NOT (p)-[:REPLIED_TO]->()
     MATCH (p)<-[:POSTED]-(u)
-    RETURN p, u.userid as userid, u.username as username;
+    RETURN p, u;
   `,
     { userid }
   );

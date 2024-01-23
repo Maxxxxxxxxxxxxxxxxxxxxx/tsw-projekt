@@ -72,6 +72,12 @@ export async function getByUsername(username) {
  */
 export async function save(username, password) {
   const session = getSession();
+
+  if (!username || !password) {
+    log.error("Tried to create user with blank username/password");
+    throw "Username/password cannot be blank!";
+  }
+
   const res = await session.run(
     `
       MATCH (user:User {username: $username})
@@ -166,6 +172,36 @@ export async function updateBio(id, newBio) {
 }
 
 /**
+ * @param {string} id
+ * @param {string} image
+ */
+export async function updateImage(id, image) {
+  const session = getSession();
+  const res = await session.run(
+    `
+      MATCH (user:User {userid: $id})
+      RETURN user;
+      `,
+    { id }
+  );
+
+  if (res.records.length != 0) {
+    const updatedRes = await session.run(
+      `
+      MATCH (user:User {userid: $id})
+      SET user.image = $image
+      RETURN user
+      `,
+      { id, image }
+    );
+
+    return _mapRecordsToObject(updatedRes.records);
+  }
+
+  session.close();
+}
+
+/**
  * @param {string} followerId
  * @param {string} followedId
  */
@@ -208,5 +244,55 @@ export async function getFollowers(userid) {
   } catch (e) {
     log.error(`Failed to parse user schema {getFollowers}`);
     return;
+  }
+}
+
+/**
+ * @param {string} followerId
+ * @param {string} followedId
+ */
+export async function follow(followerId, followedId) {
+  const session = getSession();
+
+  try {
+    const res = await session.run(
+      `
+      MATCH (u:User { userid: $followerId})
+      MATCH (f:User { userid: $followedId})
+      CREATE (u)-[:FOLLOWS]->(f)
+      RETURN f
+      `
+    );
+
+    return true;
+  } catch {
+    return false;
+  } finally {
+    session.close();
+  }
+}
+
+/**
+ * @param {string} followerId
+ * @param {string} followedId
+ */
+export async function unfollow(followerId, followedId) {
+  const session = getSession();
+
+  try {
+    const res = await session.run(
+      `
+      MATCH (u:User { userid: $followerId})
+      MATCH (f:User { userid: $followedId})
+      MATCH (u)-[r:FOLLOWS]->(f)
+      DELETE r
+      `
+    );
+
+    return true;
+  } catch {
+    return false;
+  } finally {
+    session.close();
   }
 }
