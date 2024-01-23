@@ -27,6 +27,25 @@ a,
   }
 }
 
+.btn-blackwhite {
+  border-radius: 0.9rem;
+  min-width: 1.5rem;
+  font-weight: bolder;
+  background-color: black;
+  color: white;
+  border: 3px black solid;
+}
+
+.btn-blackwhite:hover {
+  background-color: white;
+  color: black;
+}
+
+.main-view {
+  margin: auto;
+  width: 50%;
+}
+
 /* @media (min-width: 1024px) {
   body {
     display: flex;
