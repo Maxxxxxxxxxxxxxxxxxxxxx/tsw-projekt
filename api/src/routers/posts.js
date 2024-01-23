@@ -10,45 +10,64 @@ const router = express.Router();
 router.post("/", checkAuthenticated, async function (req, res) {
   const userId = req.user;
   const postContent = req.body.content;
-
   const citationId = req.query["cite"];
 
   const createdPost = citationId
-    ? await postModel.citePost(userId, content, citationId)
+    ? await postModel.citePost(userId, postContent, citationId)
     : await postModel.save(userId, postContent);
 
   res.status(201).json(createdPost);
 });
 
 // Reply to post endpoint
-router.post("/:id", checkAuthenticated, async function (req, res) {
+router.post("/reply", checkAuthenticated, async function (req, res) {
   const userId = req.user;
   const postContent = req.body.content;
-  const opId = req.params.id;
+  const opId = req.query["op"];
+
+  log.debug(opId);
 
   const citationId = req.query["cite"];
 
-  const result = citationId
-    ? await postModel.saveReplyWithCitation(
-        userId,
-        postContent,
-        opId,
-        citationId
-      )
-    : await postModel.saveReply(userId, postContent, opId);
-
-  res.status(201).json(result);
+  try {
+    const result = citationId
+      ? await postModel.saveReplyWithCitation(
+          userId,
+          postContent,
+          opId,
+          citationId
+        )
+      : await postModel.saveReply(userId, postContent, opId);
+    res.status(201).json(result);
+  } catch (e) {
+    log.error(e);
+    res.status(500).send();
+  }
 });
 
 // Get thread view
 router.get("/:id", async function (req, res) {
-  const allPosts = await postModel.get();
-  res.json(allPosts);
+  const postid = req.params.id;
+  const replies = await postModel.getReplies(postid);
+  res.json(replies);
 });
 
 router.get("/", async function (req, res) {
   const threads = await postModel.getThreads();
   res.json(threads);
+});
+
+router.get("/single/:id", async function (req, res) {
+  const postid = req.params.id;
+  const thread = await postModel.get(postid);
+  res.json(thread);
+});
+
+// Get user's threads
+router.get("/user/:id", async function (req, res) {
+  const userid = req.params.id;
+  const replies = await postModel.getUserThreads(userid);
+  res.status(200).send(replies);
 });
 
 export default router;
