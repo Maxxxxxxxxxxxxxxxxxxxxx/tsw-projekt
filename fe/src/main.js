@@ -5,20 +5,23 @@ import { createApp } from "vue";
 import App from "./App.vue";
 import bootstrap from "bootstrap/dist/js/bootstrap.bundle";
 import { createRouter, createWebHistory } from "vue-router";
+import vueCookie from "vue-cookies";
 
 import Feed from "./components/view/feed.vue";
 import Login from "./components/view/login.vue";
 import Thread from "./components/view/thread.vue";
+import Profile from "@/components/view/profile.vue";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: "/home", component: Feed },
-    { path: "/login", component: Login },
+    { path: "/login", component: Login, name: "login" },
     { path: "/thread/:postid", component: Thread, name: "thread" },
+    { path: "/profile/:userid", component: Profile, name: "profile" },
   ],
 });
 
-const app = createApp(App).use(bootstrap).use(router);
+const app = createApp(App).use(bootstrap).use(router).use(vueCookie);
 
 app.mount("#app");
