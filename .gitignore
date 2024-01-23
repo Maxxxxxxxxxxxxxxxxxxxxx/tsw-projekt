@@ -30,8 +30,9 @@ dist-ssr
 data/
 logs/
 import/
-plugins/
+# plugins/
 
 ssl/
 .env
 static/
+vue-app-old/
