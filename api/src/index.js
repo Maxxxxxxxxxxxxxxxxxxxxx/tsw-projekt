@@ -1,5 +1,6 @@
 import auth from "./routers/auth";
 import posts from "./routers/posts";
+import users from "./routers/user";
 import cdnStatic from "./routers/cdn-static";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -40,6 +41,7 @@ app.use(
     name: "sessionId",
     store: sessionStorageInstance,
     cookie: {
+      httpOnly: false,
       maxAge: 1000 * 3600,
       secure: true,
     },
@@ -49,16 +51,16 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "https://localhost:5173");
-  res.setHeader("Access-Control-Allow-Methods", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
   res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, set-cookie");
   next();
 });
 
 app.use("/api/auth", auth);
 app.use("/api/posts", posts);
 app.use("/api/static", cdnStatic);
-// app.use("/api/users", users);
+app.use("/api/users", users);
 
 const server = createServer(
   {
