@@ -12,9 +12,18 @@ router.post(
   // checkAuthenticated,
   upload.single("image"),
   async function (req, res) {
-    log.debug(`Saved profile image for user ${req.user}`);
+    const userid = req.user;
+    // @ts-ignore
+    const filename = req.file.filename;
+
+    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+
+    log.info(`Saved profile image for user ${req.user}`);
     log.debug(req.file);
-    res.status(201).send();
+
+    const newImagePath = `https://localhost:3000/images/${userid}/${filename}`;
+
+    res.status(201).send(newImagePath);
   }
 );
 
