@@ -244,7 +244,6 @@ export async function getThreadsFollowed(id) {
     match (u:User { userid: $id})
     match (followed:User)<-[r:FOLLOWS]-(u)
     where (p)<-[:POSTED]-(followed) AND NOT (p)-[:REPLIED_TO]->()
-    and r.timestamp < p.dateposted
     return p, followed
   `,
     { id }
