@@ -1,4 +1,5 @@
 <script>
+import isLoggedIn from "@/isLoggedIn";
 import Avatar from "./avatar.vue";
 import axios from "axios";
 
@@ -8,11 +9,9 @@ export default {
   },
   data() {
     return {
-      user: {
-        image: String,
-        userid: String,
-      },
+      user: {},
       loggedIn: false,
+      loaded: false,
       content: "",
     };
   },
@@ -34,7 +33,10 @@ export default {
       }
     },
   },
-  mounted() {
+  async created() {
+    const user = await isLoggedIn();
+    this.user = user;
+
     // axios.get("https://localhost:3000/api/users").then((res) => {
     //   if (res.status === 200) {
     //     this.user = res.data;
@@ -47,7 +49,7 @@ export default {
 
 <template>
   <form @submit.prevent="handleSubmit" class="postform">
-    <Avatar :image="image" />
+    <Avatar :image="user.image" />
     <input
       v-model="content"
       class="form-control form-control-sm"
