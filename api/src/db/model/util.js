@@ -1,5 +1,4 @@
 // @ts-nocheck
-
 function isObject(variable) {
   if (variable !== null && typeof variable === "object") {
     return true;

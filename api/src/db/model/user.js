@@ -206,19 +206,17 @@ export async function updateImage(id, image) {
  * @param {string} followedId
  */
 export async function followUser(followerId, followedId) {
-  if ((await get(followerId)) && (await get(followedId))) {
-    const session = getSession();
+  const session = getSession();
 
-    await session.run(
-      `
+  await session.run(
+    `
       MATCH (followed:User { userid: $followedId })
       MATCH (follower:User { userid: $followerId })
       CREATE (follower)-[:FOLLOWS]->(followed)
       `
-    );
+  );
 
-    return { message: `User ${followedId} followed` };
-  }
+  return { message: `User ${followedId} followed` };
 }
 
 /**
@@ -259,13 +257,16 @@ export async function follow(followerId, followedId) {
       `
       MATCH (u:User { userid: $followerId})
       MATCH (f:User { userid: $followedId})
-      CREATE (u)-[:FOLLOWS]->(f)
+      CREATE (u)-[r:FOLLOWS]->(f)
+      SET r.timestamp = timestamp()
       RETURN f
-      `
+      `,
+      { followerId, followedId }
     );
 
     return true;
-  } catch {
+  } catch (e) {
+    log.error(e);
     return false;
   } finally {
     session.close();
@@ -286,13 +287,37 @@ export async function unfollow(followerId, followedId) {
       MATCH (f:User { userid: $followedId})
       MATCH (u)-[r:FOLLOWS]->(f)
       DELETE r
-      `
+      `,
+      { followerId, followedId }
     );
 
     return true;
-  } catch {
+  } catch (e) {
+    log.error(e);
     return false;
   } finally {
     session.close();
+  }
+}
+
+/**
+ *
+ * @param {string} id User's id
+ */
+export async function getFollowed(id) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `
+      MATCH (u:User { userid: $id })-[:FOLLOWS]->(followed:User)
+      RETURN followed
+    `,
+      { id }
+    );
+
+    return _mapRecordsToObject(res.records);
+  } catch (e) {
+    log.error(e);
+    return [];
   }
 }
