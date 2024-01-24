@@ -1,4 +1,5 @@
 <script>
+import axios from "axios";
 import Avatar from "./avatar.vue";
 export default {
   components: {
@@ -17,7 +18,8 @@ export default {
   },
   data() {
     return {
-      parsed: false,
+      loaded: false,
+      cited: {},
     };
   },
   methods: {
@@ -27,22 +29,41 @@ export default {
     handleRedirect() {
       this.$router.push(`/profile/${this.data.userid}`);
     },
+    handleRedirectToCitedPost() {
+      this.$router.push(`/thread/${this.cited.postid}`);
+    },
+    handleRedirectToCite() {
+      this.$router.push(`/cite/${this.data.postid}`);
+    },
   },
   watch: {
     "$route.params.postid": function (newPostId, old) {
       location.reload();
     },
   },
-  created() {
+  async created() {
     const date = new Date(this.data.dateposted);
     this.data.dateposted = date.toLocaleString();
-    this.parsed = true;
+
+    try {
+      const citedRes = await axios.get(
+        `https://localhost:3000/api/posts/cited/${this.data.postid}`
+      );
+
+      console.log("citedres", citedRes.data);
+
+      this.cited = citedRes.data[0];
+    } catch (e) {
+      console.error(e);
+    }
+
+    this.loaded = true;
   },
 };
 </script>
 
 <template>
-  <div class="card" v-if="parsed">
+  <div class="card" v-if="loaded">
     <div class="card-body">
       <div class="card-upper">
         <div class="card-userwrapper">
@@ -50,6 +71,13 @@ export default {
           <h5 @click="handleRedirect" class="card-title">
             {{ data.username }}
           </h5>
+          <div
+            @click="handleRedirectToCitedPost"
+            class="card-cites text-muted"
+            v-if="cited"
+          >
+            Citing {{ this.cited.username }}'s post
+          </div>
         </div>
         <div class="card-dateposted text-muted">
           {{ data.dateposted }}
@@ -59,7 +87,7 @@ export default {
         {{ data.content }}
       </p>
       <div class="card-lower">
-        <div href="#" class="card-btn">
+        <div @click="handleRedirectToCite" class="card-btn cite-btn">
           <i class="bi bi-arrow-repeat"></i>
         </div>
         <div @click="handleClick" class="card-btn">
@@ -126,5 +154,13 @@ export default {
 .card-dateposted {
   font-size: 0.7rem;
   text-align: center;
+}
+
+.card-cites {
+  font-size: small;
+}
+.card-cites:hover {
+  cursor: pointer;
+  text-decoration: underline;
 }
 </style>
