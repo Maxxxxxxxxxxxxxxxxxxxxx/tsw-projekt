@@ -59,7 +59,11 @@ router.get("/all", async function (req, res) {
 
 router.get("/", checkAuthenticated, async function (req, res) {
   try {
-    const threads = await postModel.getThreadsFollowed(req.user);
+    const threads = await postModel.getThreadsFollowed(
+      req.user
+      // 1704075043000, // req.body.start
+      // 1706148643000  // req.body.end
+    );
     res.status(200).send(threads);
   } catch {
     res.status(200).send([]);
