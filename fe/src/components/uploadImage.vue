@@ -27,7 +27,7 @@ export default {
             { withCredentials: true }
           );
 
-          console.log(response.data);
+          location.reload();
         } catch (error) {
           console.error("Error updating profile picture");
         }
