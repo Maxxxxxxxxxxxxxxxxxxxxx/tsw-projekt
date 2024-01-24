@@ -9,17 +9,22 @@ import log from "../log";
 
 const router = express.Router();
 
-router.get("/", checkAuthenticated, async function (req, res) {
+router.get("/me", checkAuthenticated, async function (req, res) {
   const userData = await userModel.get(req.user);
   res.status(200).send(userData);
 });
 
 router.get("/all", checkAuthenticated, async function (req, res) {
-  const userData = await userModel.get();
+  const userData = await userModel.getAll();
   res.status(200).send(userData);
 });
 
-router.get("/:id", async function (req, res) {
+router.get("/me/followed", checkAuthenticated, async function (req, res) {
+  const userData = await userModel.getFollowed(req.user);
+  res.status(200).send(userData);
+});
+
+router.get("/user/:id", async function (req, res) {
   const userId = req.params.id;
 
   try {
@@ -38,7 +43,7 @@ router.post("/follow/:id", checkAuthenticated, async function (req, res) {
   const userId = req.params.id;
 
   try {
-    const res = await userModel.follow(req.user, userId);
+    const r = await userModel.follow(req.user, userId);
     res.status(201).send();
   } catch {
     return res.status(500).send();
@@ -49,7 +54,7 @@ router.delete("/follow/:id", checkAuthenticated, async function (req, res) {
   const userId = req.params.id;
 
   try {
-    const res = await userModel.unfollow(req.user, userId);
+    const r = await userModel.unfollow(req.user, userId);
     res.status(204).send();
   } catch {
     return res.status(500).send();
