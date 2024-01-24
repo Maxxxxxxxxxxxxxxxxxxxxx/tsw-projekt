@@ -70,7 +70,7 @@ export default {
     action=""
     class="postform replyform"
   >
-    <Avatar />
+    <Avatar :image="user.image" />
     <input
       class="form-control form-control-sm"
       type="text"
