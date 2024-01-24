@@ -11,6 +11,7 @@ import { createServer } from "node:https";
 import { readFileSync } from "node:fs";
 import path from "path";
 import log from "./log";
+import { Server } from "socket.io";
 
 const apiPort = process.env.API_PORT || 3000;
 const apiHost = process.env.API_HOST || "localhost";
@@ -70,6 +71,29 @@ const server = createServer(
   },
   app
 );
+
+const io = new Server(server, {
+  cors: {
+    origin: "https://localhost:5173", // Replace with your Vue app's domain
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Handle events from the client
+  socket.on("followed", (message) => {
+    console.debug(message);
+    // Broadcast the message to all connected clients
+    io.emit("followed", message);
+  });
+
+  // Handle disconnection
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
 
 server.listen(apiPort, () => {
   log.info(`Server available from: https://${apiHost}:${apiPort}`);
