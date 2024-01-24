@@ -1,5 +1,5 @@
 <template>
-  <div class="avatar">
+  <div class="avatar" v-if="parsed">
     <img class="avatar-image" :src="image" />
   </div>
 </template>
@@ -14,11 +14,11 @@ export default {
     },
   },
   data() {
-    return {};
+    return {
+      parsed: true,
+    };
   },
-  mounted() {
-
-  }
+  created() {},
 };
 </script>
 
