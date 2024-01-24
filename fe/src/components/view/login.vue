@@ -42,19 +42,16 @@ export default {
             }
           );
 
-          if (response.status === 200) {
-            const loginRes = await axios.put(
-              "https://localhost:3000/api/auth/",
-              userData,
-              {
-                withCredentials: true,
-              }
-            );
-
-            if (loginRes.status === 200) {
-              this.$router.push("/home");
+          const loginRes = await axios.put(
+            "https://localhost:3000/api/auth/",
+            userData,
+            {
+              withCredentials: true,
             }
-          }
+          );
+
+          this.$router.push("/home");
+          location.reload();
         } catch {
           alert("Error registering!");
         }
