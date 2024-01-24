@@ -74,7 +74,7 @@ const server = createServer(
 
 const io = new Server(server, {
   cors: {
-    origin: "https://localhost:5173", // Replace with your Vue app's domain
+    origin: "https://localhost:5173",
     methods: ["GET", "POST"],
   },
 });
@@ -82,14 +82,11 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("A user connected");
 
-  // Handle events from the client
   socket.on("followed", (message) => {
     console.debug(message);
-    // Broadcast the message to all connected clients
     io.emit("followed", message);
   });
 
-  // Handle disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
