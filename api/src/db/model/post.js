@@ -233,6 +233,28 @@ export async function getThreads() {
   return _mapRecordsToObject(res.records);
 }
 
+/** Gets all thread-starter posts (only those that aren't replies)
+ * @param {string} id Requester's id
+ */
+export async function getThreadsFollowed(id) {
+  const session = getSession();
+  const res = await session.run(
+    `
+    match (p:Post)
+    match (u:User { userid: $id})
+    match (followed:User)<-[r:FOLLOWS]-(u)
+    where (p)<-[:POSTED]-(followed) AND NOT (p)-[:REPLIED_TO]->()
+    and r.timestamp < p.dateposted
+    return p, followed
+  `,
+    { id }
+  );
+
+  session.close();
+
+  return _mapRecordsToObject(res.records);
+}
+
 /**
  * @param {string} userid
  */
@@ -252,4 +274,29 @@ export async function getUserThreads(userid) {
   session.close();
 
   return _mapRecordsToObject(res.records);
+}
+
+/**
+ * @param {string} postid
+ */
+export async function getCited(postid) {
+  const session = getSession();
+  try {
+    const res = await session.run(
+      `
+      MATCH (p:Post { postid: $postid})-[:CITES]->(cited:Post)<-[:POSTED]-(u)
+      RETURN cited, u
+    `,
+      { postid }
+    );
+
+    session.close();
+
+    return _mapRecordsToObject(res.records);
+  } catch (e) {
+    log.error(e);
+    return [];
+  } finally {
+    session.close();
+  }
 }
