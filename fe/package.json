@@ -13,6 +13,7 @@
     "bootstrap": "4.6.2",
     "bootstrap-icons": "^1.11.3",
     "bootstrap-vue": "^2.23.1",
+    "socket.io-client": "^4.7.4",
     "tailwind-merge": "^2.1.0",
     "vue": "^3.3.4",
     "vue-cookies": "^1.8.3",
