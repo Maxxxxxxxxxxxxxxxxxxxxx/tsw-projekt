@@ -37,7 +37,8 @@ export default {
       resetSessionCookie();
       this.userData = {};
       this.loggedIn = false;
-      this.$router.push("/login");
+
+      location.reload();
     },
   },
 };
