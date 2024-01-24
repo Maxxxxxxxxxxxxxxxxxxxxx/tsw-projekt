@@ -52,9 +52,18 @@ router.get("/:id", async function (req, res) {
   res.json(replies);
 });
 
-router.get("/", async function (req, res) {
+router.get("/all", async function (req, res) {
   const threads = await postModel.getThreads();
   res.json(threads);
+});
+
+router.get("/", checkAuthenticated, async function (req, res) {
+  try {
+    const threads = await postModel.getThreadsFollowed(req.user);
+    res.status(200).send(threads);
+  } catch {
+    res.status(200).send([]);
+  }
 });
 
 router.get("/single/:id", async function (req, res) {
@@ -67,6 +76,16 @@ router.get("/single/:id", async function (req, res) {
 router.get("/user/:id", async function (req, res) {
   const userid = req.params.id;
   const replies = await postModel.getUserThreads(userid);
+  res.status(200).send(replies);
+});
+
+// Get post's cited post
+router.get("/cited/:id", async function (req, res) {
+  const postid = req.params.id;
+  const replies = await postModel.getCited(postid);
+
+  // console.log(await postModel.getCited("55b7ac40-de22-4324-89f3-1b951f8bf772"));
+  console.log(req.params.id);
   res.status(200).send(replies);
 });
 
