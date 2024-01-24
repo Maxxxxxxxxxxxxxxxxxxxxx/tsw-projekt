@@ -21,6 +21,11 @@ export default {
       isAuthorized: false,
     };
   },
+  watch: {
+    "$route.params.userid": async function (newUserId, old) {
+      location.reload();
+    },
+  },
   async created() {
     // axios
     //   .get("https://localhost:3000/api/users")
@@ -35,7 +40,9 @@ export default {
     const userid = this.$route.params.userid;
 
     try {
-      const res = await axios.get(`https://localhost:3000/api/users/${userid}`);
+      const res = await axios.get(
+        `https://localhost:3000/api/users/user/${userid}`
+      );
       const auth = await isLoggedIn();
 
       const userTheadsData = await axios.get(
