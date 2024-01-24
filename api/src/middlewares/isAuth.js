@@ -1,8 +1,13 @@
 // @ts-nocheck
+import log from "../log";
+
 export async function checkAuthenticated(req, res, next) {
-  //   console.log(req.user);
+  log.debug("User", req.user, "auth");
   if (req.method == "OPTIONS") return next();
-  if (!req?.user) return res.status(403).send();
+  if (!req?.user) {
+    log.debug("USER FAILED AUTH: ", req.user);
+    return res.status(403).send();
+  }
   return next();
 }
 
