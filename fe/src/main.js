@@ -11,6 +11,7 @@ import Feed from "./components/view/feed.vue";
 import Login from "./components/view/login.vue";
 import Thread from "./components/view/thread.vue";
 import Profile from "@/components/view/profile.vue";
+import Cite from "@/components/view/cite.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: "/login", component: Login, name: "login" },
     { path: "/thread/:postid", component: Thread, name: "thread" },
     { path: "/profile/:userid", component: Profile, name: "profile" },
+    { path: "/cite/:postid", component: Cite, name: "cite" },
   ],
 });
 
