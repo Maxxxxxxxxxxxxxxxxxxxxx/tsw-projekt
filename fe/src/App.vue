@@ -5,6 +5,7 @@ import Navbar from "./components/layout/navbar.vue";
 import Login from "./components/view/login.vue";
 import NotFound from "./components/view/notFound.vue";
 import Profile from "./components/view/profile.vue";
+import Users from "./components/layout/users.vue";
 
 export default {
   components: {
@@ -14,12 +15,14 @@ export default {
     Login,
     Profile,
     NotFound,
+    Users,
   },
 };
 </script>
 
 <template>
   <Navbar />
+  <Users />
   <br />
   <router-view></router-view>
 </template>
